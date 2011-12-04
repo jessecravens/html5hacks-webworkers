@@ -1,0 +1,106 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+  <title>handlebars.js example</title>
+	<style type="text/css">
+
+	body {
+		font-size: 7px;
+	}
+	</style>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+	<script type="text/javascript" src="handlebars-0.9.0.pre.4.js"></script>
+ </head>
+ <body>
+	
+	<script id="some-template" type="text/x-handlebars-template">
+	  <table>
+	    <thead>
+	      <th>id</th>
+	      <th>name</th>
+	      <th>date</th>
+	      <th>price</th>
+	      <th>number</th>
+	      <th>address</th>
+	      <th>company</th>
+	      <th>desc</th>
+	      <th>age</th>
+	      <th>title</th>
+	      <th>phone</th>
+	      <th>email</th>
+	      <th>zip</th>
+	      <th>country</th>										
+	    </thead>
+	    <tbody>
+	      {{#records}}
+	        <tr>
+	          <td>{{id}}</td>
+	          <td>{{name}}</td>
+	          <td>{{date}}</td>
+	          <td>{{price}}</td>	
+	          <td>{{number}}</td>
+	          <td>{{address}}</td>		
+	          <td>{{company}}</td>	
+	          <td>{{desc}}</td>
+	          <td>{{age}}</td>
+	          <td>{{title}}</td>
+	          <td>{{phone}}</td>
+	          <td>{{email}}</td>
+	          <td>{{zip}}</td>						
+	          <td>{{country}}</td>
+	        </tr>
+	      {{/records}}
+	    </tbody>
+	  </table>
+	</script>
+	
+	<select>
+	  <option value="1">One</option>
+	  <option value="2">Two</option>
+	  <option value="3">Three</option>
+	  <option value="4">Four</option>
+	</select>
+
+	<select>
+	  <option value="1">One</option>
+	  <option value="2">Two</option>
+	  <option value="3">Three</option>
+	  <option value="4">Four</option>
+	</select>
+	
+	<div id="2Darray"></div>
+	<div id="content"></div>
+	
+	<script type="text/javascript">
+		
+		var source = $("#some-template").html();
+  		var template = Handlebars.compile(source);
+
+		var process = function(json){
+			
+			var r = json.recordsReturned;
+			var c = json.recordsReturned;
+			
+			var a = new Array(r);
+
+			for (var i = 0; i < r; i++) {
+			    a[i] = new Array(c);
+
+			    for (var j = 0; j < c; j++) {
+			        a[i][j] = "[" + i + "," + j + "]";
+			    }
+			}
+			
+			json['2Darray'] = a 
+			return json;
+			
+		}
+  		var data = $.getJSON("data.json", function(json){
+							var pJSON = process(json)
+							console.log('pJSON: ' + pJSON['2Darray'])
+							$("#2Darray").text(pJSON['2Darray']);
+							$("#content").html(template(pJSON));
+						});
+	</script>
+ </body>
+</html>

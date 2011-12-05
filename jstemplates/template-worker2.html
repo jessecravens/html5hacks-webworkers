@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>html5hacks</title>
+<link rel="icon" href="images/favicon.gif" type="image/x-icon"/>
+ <!--[if lt IE 9]>
+ <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+<link rel="shortcut icon" href="images/favicon.gif" type="image/x-icon"/> 
+<link rel="stylesheet" type="text/css" href="css/styles.css"/>
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<script type="text/javascript" src="handlebars-0.9.0.pre.4.js"></script>
+
+<script id="main-template" type="text/x-handlebars-template">
+  <table>
+    <thead>
+      <th>id</th>
+      <th>name</th>
+      <th>date</th>
+      <th>price</th>
+      <th>number</th>
+      <th>address</th>
+      <th>company</th>
+      <th>desc</th>
+      <th>age</th>
+      <th>title</th>
+      <th>phone</th>
+      <th>email</th>
+      <th>zip</th>
+      <th>country</th>										
+    </thead>
+    <tbody>
+      {{#records}}
+        <tr>
+          <td>{{id}}</td>
+          <td>{{name}}</td>
+          <td>{{date}}</td>
+          <td>{{price}}</td>	
+          <td>{{number}}</td>
+          <td>{{address}}</td>		
+          <td>{{company}}</td>	
+          <td>{{desc}}</td>
+          <td>{{age}}</td>
+          <td>{{title}}</td>
+          <td>{{phone}}</td>
+          <td>{{email}}</td>
+          <td>{{zip}}</td>						
+          <td>{{country}}</td>
+        </tr>
+      {{/records}}
+    </tbody>
+  </table>
+</script>
+
+<script id="avgPrice-template" type="text/x-handlebars-template">
+  <p>${{avgPrice}}</p>
+</script>
+
+<script id="sumPrice-template" type="text/x-handlebars-template">
+  <p>${{sumPrice}}.00</p>
+</script>
+
+<script id="highComp-template" type="text/x-handlebars-template">
+  <p>{{highComp}}</p>
+</script>
+
+</head>
+<body>
+   <div class="bg">
+	   
+	  <div id="container">
+		<header></header>
+		
+		<div class="cols_content">
+		   <section class="group1">
+		      <h3>Average Price</h3>
+		      <p id="col1">...loading</p>
+		    </section>
+		   <section class="group2">
+		      <h3>Summed Price</h3>
+		      <p id="col2">...loading</p>  
+		    </section>
+		   <section class="group3">
+		      <h3>High Computation</h3>
+		      <p id="col3">...loading</p>
+		  </section>
+		</div>
+		
+		<div class="cols_content">
+			<div id="table1" class="group4"></div>		
+		</div>
+		
+	  </div> <!-- end container -->
+	
+	  <footer></footer>
+   </div> <!-- end bg -->
+
+
+	<script type="text/javascript">
+
+		var processJSON = function(json){
+			
+			function Avg(a) {
+				var sum = 0;
+				var avg;
+				
+					for (var i = 0; i < a.length; i++) {
+		   				sum = sum + a[i]*1;
+		   				avg = sum/a.length;
+					}		
+					json['avgPrice'] = avg;
+			};
+			
+			function Sum(a) {
+				var sum = 0;
+				
+					for (var i = 0; i < a.length; i++) {
+		   				sum = sum + a[i]*1;
+					}		
+					json['sumPrice'] = sum;
+			};
+			
+			function highComp(json) {
+				var worker = new Worker('highComp.js'),
+				    message = {
+				      fn: 'filterHugeDataSet',
+				      data: json,
+				      filter: 'foo'
+				    };
+				
+				worker.postMessage(JSON.stringify(message));
+				
+				var getData = function(){
+					
+
+					return {
+						highComp: function() {worker.addEventListener('message', function(event) {
+								// console.log(event.data.highComp)
+								return event.data.highComp;
+								// return d;
+								}, false);
+							}
+						};
+				}();
+				// console.log('worker.getData()')
+				// console.log(worker.getData())
+				h = getData.highComp();
+				// console.log(h);
+				return h;
+			};
+			
+			var priceArray = new Array();
+			
+			// Create an array of prices from the objects in the JSON data set 
+			// iterate through JSON push to priceArray
+			for (i = 0; i < json.records.length; i++) {
+				priceArray.push(json.records[i].price);
+			}
+			
+			// Do our calculations
+			
+			h = highComp(json);
+			a = Avg(priceArray);
+			s = Sum(priceArray);
+
+			// json['avgPrice'] = a
+			// json['sumPrice'] = s
+
+
+			json['highComp'] = h
+			
+			// console.log(json.highComp)
+			
+			return json;
+			
+		}
+		
+		//set up Templates
+
+		var avgPriceSource = $("#avgPrice-template").html();
+ 		var avgPriceTemplate = Handlebars.compile(avgPriceSource);
+
+		var sumPriceSource = $("#sumPrice-template").html();
+ 		var sumPriceTemplate = Handlebars.compile(sumPriceSource);
+
+		var highCompSource = $("#highComp-template").html();
+ 		var highCompTemplate = Handlebars.compile(highCompSource);
+
+		var mainTableSource = $("#main-template").html();
+ 		var mainTableTemplate = Handlebars.compile(mainTableSource);
+
+
+		//get data, bind to template, and update DOM
+ 		var data = $.getJSON("data.json", function(json){
+				var pJSON = processJSON(json)
+				console.log(pJSON.highComp)
+				$("#col1").html(avgPriceTemplate(pJSON));
+				$("#col2").html(sumPriceTemplate(pJSON));
+				$("#col3").html(highCompTemplate(pJSON));
+				$("#table1").html(mainTableTemplate(pJSON));
+			});						
+	</script>
+
+
+  </body>
+</html>

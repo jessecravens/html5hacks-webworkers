@@ -2,8 +2,6 @@
     "recordsReturned": 1000,
     "totalRecords": 1000,
 	"2Darray": null,
-	"avgPrice": null,
-	"avgAge": null,	
     "startIndex": 0,
     "sort": null,
     "dir": "asc",

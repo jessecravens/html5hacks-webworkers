@@ -9,10 +9,8 @@
   <![endif]-->
 <link rel="shortcut icon" href="images/favicon.gif" type="image/x-icon"/> 
 <link rel="stylesheet" type="text/css" href="css/styles.css"/>
-
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 <script type="text/javascript" src="handlebars-0.9.0.pre.4.js"></script>
-
 <script id="main-template" type="text/x-handlebars-template">
   <table>
     <thead>
@@ -99,32 +97,28 @@
 	  <footer></footer>
    </div> <!-- end bg -->
 
-
 	<script type="text/javascript">
-
-		var processJSON = function(){
+		
+		var processJSON = {
 			
-			return {
-				
 				init: function(json, callback){
 					var priceArray = new Array();
 					for (i = 0; i < json.records.length; i++) {
 						priceArray.push(json.records[i].price);
 					};
 					
+					// low overhead functions that return repsonses to the json object
 					json['avgPrice'] = processJSON.avg(priceArray);
 					json['sumPrice'] = processJSON.sum(priceArray);
 					
 					// pass to worker after other computations are complete
-					processJSON.highComp(json);
-					
-					callback(json);
+					// wrap in a continuation callback so that the async message listener returns before appying to templates 
+					processJSON.highComp(json, callback);	
 				},
-				
 				avg: function(a) {
 					var sum = 0;
 					var avg;
-
+		
 						for (var i = 0; i < a.length; i++) {
 			   				sum = sum + a[i]*1;
 			   				avg = sum/a.length;
@@ -134,15 +128,14 @@
 				},
 				sum: function(a) {
 					var sum = 0;
-
+		
 						for (var i = 0; i < a.length; i++) {
 			   				sum = sum + a[i]*1;
 						}		
 						// json['sumPrice'] = sum;
 						return sum;
 				},
-				
-				highComp: function(json) {
+				highComp: function(json, callback) {
 						var worker = new Worker('highComp.js'),
 						    message = {
 						      // filterfn: 'filterHugeDataSet',
@@ -150,19 +143,16 @@
 						      data: json,
 						      filter: 'dir'
 						    };
-
+		
 						worker.postMessage(JSON.stringify(message));
-
 						worker.addEventListener('message', function(event) {
-							var highCompSource = $("#highComp-template").html();
-					 		var highCompTemplate = Handlebars.compile(highCompSource);
-							console.log(event.data)
-							$("#col3").html(highCompTemplate(event.data));
+							json['highComp'] = event.data;
+							//this is the function that applies the template once the async listener's message returns
+							callback(json);
 						}, false);
 				}
 			};
-		}();
-				
+			
 		//set up Templates
 		var avgPriceSource = $("#avgPrice-template").html();
  		var avgPriceTemplate = Handlebars.compile(avgPriceSource);
@@ -173,15 +163,18 @@
 		var mainTableSource = $("#main-template").html();
  		var mainTableTemplate = Handlebars.compile(mainTableSource);
 
+		var highCompSource = $("#highComp-template").html();
+ 		var highCompTemplate = Handlebars.compile(highCompSource);
+
 		//get data, bind to template, and update DOM
  		var data = $.getJSON("data.json", function(json){
 				
 				processJSON.init(json, function(json){
 					$("#col1").html(avgPriceTemplate(json));
 					$("#col2").html(sumPriceTemplate(json));
+					$("#col3").html(highCompTemplate(json));
 					$("#table1").html(mainTableTemplate(json));	
 				})
-
 			});						
 	</script>
 	
@@ -195,6 +188,5 @@
 	}
 	</script>
 	<script src="https://www.googleapis.com/books/v1/volumes?q=html5&maxResults=40&callback=handleResponse"></script>
-	
   </body>
 </html>

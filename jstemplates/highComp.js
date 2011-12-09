@@ -44,8 +44,8 @@ var computations = {
   create2Darray: function (data) {
 	// var r = data.recordsReturned;
 	// var c = Math.round(data.avgPrice);
-	var r = 700;
-	var c = 700;
+	var r = 600;
+	var c = 400;
 	
 	var a = new Array(r);
 	
@@ -94,6 +94,8 @@ the params we passed along with the data
 // filtered['data'] = filters[message.fn](message.data, message.filter); 
 	// filtered['data'] = message.data;
 	computated['highComp'] = computations[message.compfn](message.data);
+	computated = computations[message.compfn](message.data);
+	
 	
 /*
 Now we want to send it back. Once again we'll
